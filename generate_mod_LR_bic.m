@@ -1,14 +1,22 @@
-function generate_mod_LR_bic()
+function generate_mod_LR_bic(input_path, up_scale, need_bic)
 
-scale = 3
+% scale = upscale
 %% set parameters
 % comment the unnecessary line
-input_path = '/home/ser606/clh/test_img/Set5';
-save_mod_path = strcat('/home/ser606/clh/test_img/Set5_mod_x', num2str(scale));
-save_LR_path = strcat('/home/ser606/clh/test_img/Set5_LR_x', num2str(scale));
-save_bic_path = strcat('/home/ser606/clh/test_img/Set5_bic_x', num2str(scale));
+% input_path = inputpath;
+save_mod_path = strcat(input_path, '_mod_x', num2str(scale));
+save_LR_path = strcat(input_path, '_LR_x', num2str(scale));
 
-up_scale = scale;
+if need_bic 
+    save_bic_path = strcat(input_path, '_bic_x', num2str(scale));
+    if exist('save_bic_path', 'var')
+        if exist(save_bic_path, 'dir')
+            disp(['It will cover ', save_bic_path]);
+        else
+            mkdir(save_bic_path);
+        end
+    end
+end
 
 if exist('save_mod_path', 'var')
     if exist(save_mod_path, 'dir')
@@ -24,45 +32,33 @@ if exist('save_LR_path', 'var')
         mkdir(save_LR_path);
     end
 end
-if exist('save_bic_path', 'var')
-    if exist(save_bic_path, 'dir')
-        disp(['It will cover ', save_bic_path]);
-    else
-        mkdir(save_bic_path);
-    end
-end
 
-idx = 0;
+
 filepaths = dir(fullfile(input_path,'*.*'));
-for i = 1 : length(filepaths)
-    [paths,imname,ext] = fileparts(filepaths(i).name);
+parfor i = 1 : length(filepaths)
+    [~,imname,ext] = fileparts(filepaths(i).name);
     if isempty(imname)
         disp('Ignore . folder.');
     elseif strcmp(imname, '.')
         disp('Ignore .. folder.');
     else
-        idx = idx + 1;
-        str_rlt = sprintf('%d\t%s.\n', idx, imname);
+        str_rlt = sprintf('Procesiing the %s%s\n', imname, ext);
         fprintf(str_rlt);
         % read image
         img = imread(fullfile(input_path, [imname, ext]));
+        if size(img)==3
+            img = img(:,:,1:3);
+        end
         % modcrop
         img = modcrop(img, up_scale);
-        if exist('save_mod_path', 'var')
-            imwrite(img, fullfile(save_mod_path, [imname, '.png']));
-        end
-        % LR
+        imwrite(img, fullfile(save_mod_path, [imname, '.png']));
+        % bic_down_load
         im_LR = imresize(img, 1/up_scale, 'bicubic');
-        if exist('save_LR_path', 'var')
-            imwrite(im_LR, fullfile(save_LR_path, [imname, '_LRx', num2str(up_scale), '.png']));
-        end
-        %         im_B = double(im_B)/255;
-        %         im_B = rgb2ycbcr(im_B);
-        %         im_B = im_B(:,:,1);
-        % Bicubic
-        if exist('save_bic_path', 'var')
-            im_B = imresize(im_LR, up_scale, 'bicubic');
-            imwrite(im_B, fullfile(save_bic_path, [imname, '_bicx', num2str(up_scale), '.png']));
+        imwrite(im_LR, fullfile(save_LR_path, [imname, '_LRx', num2str(up_scale), '.png']));
+        % bic_up_scale
+        if need_bic
+            im_B = imresize(img, up_scale, 'bicubic');
+            imwrite(im_B, fullfile(save_bic_path, [imname, '_bic_x', num2str(up_scale), '.png']));
         end
     end
 end

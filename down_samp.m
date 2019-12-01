@@ -18,7 +18,7 @@ filepaths = [dir(fullfile(source_folder, '*.png'));dir(fullfile(source_folder, '
 for i = 435 : length(filepaths)
     filename = filepaths(i).name;
     fprintf('No.%d -- Processing %s\n', i, filename);
-    [add, im_name, type] = fileparts(filepaths(i).name);
+    [~, im_name, type] = fileparts(filepaths(i).name);
     image = imread(fullfile(source_folder, filename));
 %     image = modcrop(image, scale);
     
