@@ -17,6 +17,7 @@ cd(path);
 
 % Select NIfTI
 [file,path] = uigetfile('*.nii');
+% [file,path] = uigetfile('*.img');
 if isequal(file,0)
    disp('User selected Cancel');
 else
